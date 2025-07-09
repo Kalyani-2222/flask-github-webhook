@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GitHub Events</title>
+</head>
+<body>
+  <h1>GitHub webhook events</h1>
+  <ul id="events"></ul>
+  <script>
+    async function fetchEvents() {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/events");
+        if (!res.ok) throw new Error(res.statusText);
+        const events = await res.json();
+        const list = document.getElementById("events");
+        list.innerHTML = events.map(e => `<li>${e.event || e.pusher?.name || "?"}</li>`).join("") || "<li>No events yet</li>";
+      } catch (e) {
+        console.error("Fetch error:", e);
+      }
+    }
+    fetchEvents();
+    setInterval(fetchEvents, 15000);
+  </script>
+</body>
+</html>
