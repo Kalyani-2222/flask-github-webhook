@@ -8,7 +8,8 @@ CORS(app)  # Enable CORS for all origins
 
 # ✅ MongoDB Atlas connection (replace with your actual cluster URI if different)
 client = pymongo.MongoClient(
-    "mongodb+srv://Kalyani-2222:Kalyani@123@cluster0.mongodb.net/?retryWrites=true&w=majority"
+   client = pymongo.MongoClient("mongodb+srv://Kalyani:Kalyani%40123@cluster0.mongodb.net/webhookDB?retryWrites=true&w=majority")
+
 )
 
 db = client['github_events']
