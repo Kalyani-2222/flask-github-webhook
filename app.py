@@ -1,41 +1,74 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from datetime import datetime
-import pymongo
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GitHub Events</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 30px;
+    }
 
-app = Flask(__name__)
-CORS(app)  # Enable CORS for all origins
+    h1 {
+      color: #333;
+    }
 
-# ✅ MongoDB Atlas connection (replace with your actual cluster URI if different)
-client = pymongo.MongoClient(
-   client = pymongo.MongoClient("mongodb+srv://Kalyani:Kalyani%40123@cluster0.mongodb.net/webhookDB?retryWrites=true&w=majority")
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
 
-)
+    li {
+      background: #fff;
+      margin-bottom: 10px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>📌 Latest GitHub Events</h1>
+  <ul id="eventList"></ul>
 
-db = client['github_events']
-collection = db['events']
+  <script>
+    function fetchEvents() {
+      fetch("https://xxxxxx.ngrok-free.app/events")
+        .then(response => response.json())
+        .then(data => {
+          const list = document.getElementById("eventList");
+          list.innerHTML = "";
 
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    event_data = request.get_json()
-    print("✅ Webhook received")
+          data.forEach(event => {
+            let text = "";
+            const author = event?.sender?.login || "Someone";
+            const time = event.timestamp || "some time ago";
 
-    if not event_data:
-        return jsonify({"error": "No data received"}), 400
+            if (event.event === "push") {
+              const branch = event.ref?.split("/").pop() || "unknown";
+              text = `${author} pushed to ${branch} on ${time}`;
+            } else if (event.event === "pull_request") {
+              const from = event.pull_request?.head?.ref || "unknown";
+              const to = event.pull_request?.base?.ref || "unknown";
+              text = `${author} submitted a pull request from ${from} to ${to} on ${time}`;
+            } else {
+              text = `${author} triggered ${event.event} on ${time}`;
+            }
 
-    event_data['timestamp'] = datetime.utcnow().strftime('%d %B %Y - %I:%M %p UTC')
-    collection.insert_one(event_data)
-    return jsonify({"message": "Event stored"}), 200
+            const li = document.createElement("li");
+            li.textContent = text;
+            list.appendChild(li);
+          });
+        })
+        .catch(error => {
+          console.error("❌ Failed to fetch events:", error);
+        });
+    }
 
-@app.route('/events', methods=['GET'])
-def get_events():
-    print("📥 Fetching events from MongoDB")
-    events = list(collection.find({}, {"_id": 0}))  # Exclude Mongo _id
-    return jsonify(events), 200
-
-@app.route('/')
-def index():
-    return "✅ GitHub Webhook Flask server is running!"
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    fetchEvents(); // Load on first open
+    setInterval(fetchEvents, 15000); // Refresh every 15 seconds
+  </script>
+</body>
+</html>
